@@ -360,7 +360,7 @@ static void def_update_callbacks (lw_pump pump,
                              watch->on_read_ready != NULL, on_read_ready != NULL,
                              watch->on_write_ready != NULL, on_write_ready != NULL,
                              watch->edge_triggered, edge_triggered,
-                             watch->tag, tag);
+                             watch, watch);
    }
 
    watch->on_read_ready = on_read_ready;
