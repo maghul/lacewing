@@ -58,6 +58,7 @@ void lw_event_delete (lw_event ctx)
 
    close (ctx->pipe_w);
    close (ctx->pipe_r);
+   free (ctx);
 }
 
 lw_bool lw_event_signalled (lw_event ctx)
