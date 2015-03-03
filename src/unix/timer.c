@@ -42,12 +42,15 @@ struct _lw_timer
 
    #ifdef _lacewing_use_timerfd
       int fd;
+      lw_pump_watch watch;
    #endif
 
    lw_event stop_event;
    long interval;
 
-   lw_thread timer_thread;
+   #ifndef _lacewing_use_timerfd
+      lw_thread timer_thread;
+   #endif
 };
 
 static void timer_tick (lw_timer ctx)
@@ -84,12 +87,13 @@ lw_timer lw_timer_new (lw_pump pump)
       return 0;
 
    ctx->pump = pump;
-   ctx->timer_thread = lw_thread_new ("timer_thread", timer_thread);
    ctx->stop_event = lw_event_new ();
 
    #ifdef _lacewing_use_timerfd
       ctx->fd = timerfd_create (CLOCK_MONOTONIC, TFD_NONBLOCK);
-      lw_pump_add (ctx->pump, ctx->fd, ctx, (lw_pump_callback) timer_tick, 0, lw_true);
+      ctx->watch= lw_pump_add (ctx->pump, ctx->fd, ctx, (lw_pump_callback) timer_tick, 0, lw_true);
+   #else
+      ctx->timer_thread = lw_thread_new ("timer_thread", timer_thread);
    #endif
 
    return ctx;
@@ -102,6 +106,10 @@ void lw_timer_delete (lw_timer ctx)
 
    #ifdef _lacewing_use_timerfd
       close (ctx->fd);
+      lw_pump_remove (ctx->pump, ctx->watch);
+   #else
+      lw_thread_delete (ctx->timer_thread);
+      ctx->timer_thread= NULL;
    #endif
 
    free (ctx);
