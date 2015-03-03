@@ -89,10 +89,16 @@ static void def_cleanup (lw_pump pump)
          lw_thread_join (ctx->watcher.thread);
       }
 
-      lw_event_delete (ctx->watcher.resume_event);
+      lw_thread_delete (ctx->watcher.thread);
+      ctx->watcher.thread = NULL;
 
+      lw_event_delete (ctx->watcher.resume_event);
+      ctx->watcher.resume_event= NULL;
    #endif
 
+      lw_sync_delete (ctx->sync_signals);
+
+      list_clear (ctx->signalparams);
    /* TODO */
 }
 
