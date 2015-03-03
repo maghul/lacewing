@@ -54,6 +54,7 @@ void lw_sync_delete (lw_sync ctx)
 {
    pthread_mutex_destroy (&ctx->mutex);
    pthread_mutexattr_destroy (&ctx->attr);
+   free (ctx);
 }
 
 void lw_sync_lock (lw_sync ctx)
