@@ -59,7 +59,8 @@ struct _lw_eventpump
       struct
       {
          lw_thread thread;
-   
+         lw_bool do_loop;
+
          int num_events;
          lwp_eventqueue_event events [max_events];
    

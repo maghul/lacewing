@@ -50,6 +50,7 @@ lw_eventpump lw_eventpump_new ()
 
    #ifdef ENABLE_THREADS
       ctx->watcher.thread = lw_thread_new ("watcher", (void *) watcher);
+      ctx->watcher.do_loop = lw_true;
       ctx->watcher.resume_event = lw_event_new ();
    #endif
 
@@ -91,6 +92,7 @@ static void def_cleanup (lw_pump pump)
 
       lw_thread_delete (ctx->watcher.thread);
       ctx->watcher.thread = NULL;
+      ctx->watcher.do_loop = lw_false;
 
       lw_event_delete (ctx->watcher.resume_event);
       ctx->watcher.resume_event= NULL;
@@ -188,6 +190,7 @@ lw_bool process_event (lw_eventpump ctx, lwp_eventqueue_event event)
 lw_error lw_eventpump_tick (lw_eventpump ctx)
 {
    lw_bool need_watcher_resume = lw_false;
+   lw_bool do_loop = lw_true;
 
    #ifdef ENABLE_THREADS
 
@@ -196,9 +199,10 @@ lw_error lw_eventpump_tick (lw_eventpump ctx)
          /* sleepy ticking: the watcher thread already grabbed some events we
           * need to process.
           */
-         for (int i = 0; i < ctx->watcher.num_events; ++ i)
-            process_event (ctx, ctx->watcher.events [i]);
-   
+         for (int i = 0; i < ctx->watcher.num_events; ++ i) {
+            do_loop &= process_event (ctx, ctx->watcher.events [i]);
+         }
+
          ctx->watcher.num_events = 0;
        
          need_watcher_resume = lw_true;
@@ -211,9 +215,10 @@ lw_error lw_eventpump_tick (lw_eventpump ctx)
    int count = lwp_eventqueue_drain (ctx->queue, lw_false, max_events, events);
 
    for (int i = 0; i < count; ++ i)
-      process_event (ctx, events [i]);
+      do_loop &= process_event (ctx, events [i]);
    
    #ifdef ENABLE_THREADS
+      ctx->watcher.do_loop &= do_loop;
       if (need_watcher_resume)
          lw_event_signal (ctx->watcher.resume_event);
    #endif
@@ -280,7 +285,7 @@ lw_error lw_eventpump_start_sleepy_ticking
 
 static void watcher (lw_eventpump ctx)
 {
-   for (;;)
+   while (ctx->watcher.do_loop)
    {
       assert (ctx->watcher.num_events == 0);
 
