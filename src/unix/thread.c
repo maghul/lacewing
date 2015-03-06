@@ -95,13 +95,14 @@ lw_bool lw_thread_started (lw_thread ctx)
 
 void * lw_thread_join (lw_thread ctx)
 {
-   if (!lw_thread_started (ctx))
+   if (ctx->thread==0) 
       return (void *) -1;
 
    void * exit_code;
 
    if (pthread_join (ctx->thread, &exit_code))
       return (void *) -1;
+   ctx->thread= 0;
 
    return exit_code;
 }
