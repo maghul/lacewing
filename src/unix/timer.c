@@ -154,8 +154,8 @@ void lw_timer_start (lw_timer ctx, long interval)
             spec.it_interval.tv_sec  = interval / 1000;
             spec.it_interval.tv_nsec = (interval % 1000) * 1000000;
 
-            spec.it_value.tv_sec = 0;
-            spec.it_value.tv_nsec = 1;
+            spec.it_value.tv_sec = spec.it_interval.tv_sec;
+            spec.it_value.tv_nsec = spec.it_interval.tv_nsec;
  
             timerfd_settime (ctx->fd, 0, &spec, 0);
             
