@@ -421,7 +421,7 @@ static lw_bool sockaddr_equal (struct sockaddr * a, struct sockaddr * b)
 
       return !memcmp (&((struct sockaddr_in *) a)->sin_addr,
                       &((struct sockaddr_in *) b)->sin_addr,
-                      sizeof (struct in6_addr));
+                      sizeof (struct in_addr));
    }
 
    return lw_false;
