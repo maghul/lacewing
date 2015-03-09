@@ -206,6 +206,7 @@ void lw_timer_stop (lw_timer ctx)
     #else
         #ifdef _lacewing_use_timerfd
            struct itimerspec spec = {};
+	   bzero( &spec, sizeof(struct itimerspec));
            timerfd_settime (ctx->fd, 0, &spec, 0);
         #endif
     #endif
