@@ -142,44 +142,46 @@ lw_bool process_event (lw_eventpump ctx, lwp_eventqueue_event event)
 
    char signal;
 
-   if (read (ctx->signalpipe_read, &signal, sizeof (signal)) == -1)
-   {
-      lw_sync_release (ctx->sync_signals);
-      return lw_true;
-   }
-
-   switch (signal)
-   {
-      case sig_exit_eventloop:
-      {
-         lw_sync_release (ctx->sync_signals);
-         return lw_false;
-      }
-
-      case sig_remove:
-      {
-         lw_pump_watch to_remove = list_front (ctx->signalparams);
-         list_pop_front (ctx->signalparams);
-
-         free (to_remove);
-
-         lw_pump_remove_user ((lw_pump) ctx);
-
-         break;
-      }
-
-      case sig_post:
-      {
-         void * func = list_front (ctx->signalparams);
-         list_pop_front (ctx->signalparams);
-
-         void * param = list_front (ctx->signalparams);
-         list_pop_front (ctx->signalparams);
-
-         ((void * (*) (void *)) func) (param);
-
-         break;
-      }
+   while (1) {
+      if (read (ctx->signalpipe_read, &signal, sizeof (signal)) == -1)
+	 {
+	    lw_sync_release (ctx->sync_signals);
+	    return lw_true;
+	 }
+      
+      switch (signal)
+	 {
+	 case sig_exit_eventloop:
+	    {
+	       lw_sync_release (ctx->sync_signals);
+	       return lw_false;
+	    }
+	    
+	 case sig_remove:
+	    {
+	       lw_pump_watch to_remove = list_front (ctx->signalparams);
+	       list_pop_front (ctx->signalparams);
+	       
+	       free (to_remove);
+	       
+	       lw_pump_remove_user ((lw_pump) ctx);
+	       
+	       break;
+	    }
+	    
+	 case sig_post:
+	    {
+	       void * func = list_front (ctx->signalparams);
+	       list_pop_front (ctx->signalparams);
+	       
+	       void * param = list_front (ctx->signalparams);
+	       list_pop_front (ctx->signalparams);
+	       
+	       ((void * (*) (void *)) func) (param);
+	       
+	       break;
+	    }
+         }
    };
 
    lw_sync_release (ctx->sync_signals);
